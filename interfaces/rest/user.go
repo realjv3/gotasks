@@ -2,11 +2,12 @@ package rest
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
 
 	"github.com/realjv3/gotasks/domain"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type UserHandler struct {

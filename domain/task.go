@@ -12,16 +12,13 @@ type Task struct {
 
 type TaskRepository interface {
 	Create(task *Task) (*Task, error)
-	//GetByID(taskID int) (*Task, error)
-	//Update(task *Task) (*Task, error)
-	//Delete(task *Task) error
-	//GetByUser(userID int) ([]*Task, error)
+	GetByID(id int) (*Task, error)
+	GetByUser(userID int) ([]*Task, error)
+	Update(task *Task) (*Task, error)
 }
 
 type TaskService interface {
-	CreateTask(task *Task) error
-	//UpdateTask(task *Task) error
-	//DeleteTask(task *Task) error
-	//GetTaskByID() (*Task, error)
-	//GetTasksByUser(userID int) ([]*Task, error)
+	CreateTask(task *Task) (*Task, error)
+	GetTasksByUser(userID int) ([]*Task, error)
+	FinishTask(taskID int) (*Task, error)
 }

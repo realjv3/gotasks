@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -18,11 +17,27 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	keyFileName = "private.pem"
+	keyType     = "EC PRIVATE KEY"
+)
+
 type authService struct {
 	userRepo domain.UserRepository
 }
 
 func NewAuthService(userRepo domain.UserRepository) domain.AuthService {
+	if _, err := os.Stat(keyFileName); err != nil {
+		log.Println("Generating private key...")
+
+		key, err := generatePrivateKey()
+		if err != nil {
+			log.Fatalf("Error generating private key - %v", err)
+		}
+
+		err = savePrivateKey(key)
+	}
+
 	return &authService{
 		userRepo: userRepo,
 	}
@@ -44,32 +59,37 @@ func (s *authService) Login(userID int, password string) (string, error) {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	return token.SignedString(os.Getenv("JWT_KEY"))
-}
-
-func generatePrivateKey() *ecdsa.PrivateKey {
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	key, err := loadPrivateKey()
 	if err != nil {
-		log.Fatalf("Error generating private key - %v", err)
+		return "", err
 	}
 
-	return key
+	return token.SignedString(key)
+}
+
+func generatePrivateKey() (*ecdsa.PrivateKey, error) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return key, nil
 }
 
 func savePrivateKey(key *ecdsa.PrivateKey) error {
 	keyBytes, err := x509.MarshalECPrivateKey(key)
 	if err != nil {
-		log.Fatalf("Error marshalling private key - %v", err)
+		return err
 	}
 
 	keyPEM := pem.Block{
-		Type:  "EC PRIVATE KEY",
+		Type:  keyType,
 		Bytes: keyBytes,
 	}
 
-	file, err := os.Create("private.pem")
+	file, err := os.Create(keyFileName)
 	if err != nil {
-		log.Fatalf("Error creating private.pem - %v", err)
+		return err
 	}
 	defer file.Close()
 
@@ -77,20 +97,20 @@ func savePrivateKey(key *ecdsa.PrivateKey) error {
 }
 
 func loadPrivateKey() (*ecdsa.PrivateKey, error) {
-	keyBytes, err := ioutil.ReadFile("private.pem")
+	keyBytes, err := os.ReadFile(keyFileName)
 	if err != nil {
 		return nil, err
 	}
 
 	block, _ := pem.Decode(keyBytes)
-	if block == nil || block.Type != "EC PRIVATE KEY" {
-		return nil, errors.New("failed to decode PEM block")
+	if block == nil || block.Type != keyType {
+		return nil, err
 	}
 
 	key, err := x509.ParseECPrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return key, nil
 }

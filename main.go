@@ -30,13 +30,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	taskRepo, err := storage.NewTaskRepo(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	userService := services.NewUserService(userRepo)
 	authService := services.NewAuthService(userRepo)
-
-	//taskRepo, err := storage.NewTaskRepo(db)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	taskService := services.NewTaskService(taskRepo)
 
 	log.Println("Starting HTTP server...")
 
@@ -50,6 +52,9 @@ func main() {
 
 	userHandler := rest.NewUserHandler(userService)
 	userHandler.RegisterUserRoutes(r)
+
+	taskHandler := rest.NewTaskHandler(taskService)
+	taskHandler.RegisterRoutes(r)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

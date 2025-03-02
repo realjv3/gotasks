@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -12,10 +11,11 @@ import (
 )
 
 func (h *UserHandler) RegisterUserRoutes(r chi.Router) {
-	r.Group(func(r chi.Router) {
-		r.Use(authMiddleware)
-		r.Route("/users", func(r chi.Router) {
-			r.Post("/", h.createUser)
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", h.createUser)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware)
 			r.Get("/{id}", h.getUser)
 		})
 	})
@@ -35,22 +35,33 @@ func authMiddleware(next http.Handler) http.Handler {
 
 		token, err := jwt.Parse(header[7:], func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
-			return []byte(os.Getenv("JWT_KEY")), nil
+			return []byte("JWT_KEY"), nil
 		})
 
 		switch {
 		case token.Valid:
 		case errors.Is(err, jwt.ErrTokenMalformed):
-			http.Error(w, "Malformed token", http.StatusUnauthorized)
+			http.Error(w, "malformed token", http.StatusUnauthorized)
 		case errors.Is(err, jwt.ErrTokenSignatureInvalid):
-			http.Error(w, "Invalid signature", http.StatusUnauthorized)
+			http.Error(w, "invalid signature", http.StatusUnauthorized)
 		case errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet):
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (h *TaskHandler) RegisterRoutes(r chi.Router) {
+	r.Group(func(r chi.Router) {
+		r.Use(authMiddleware)
+		r.Route("/tasks", func(r chi.Router) {
+			r.Post("/", h.createTask)
+			r.Get("/{userID}", h.getTasksByUser)
+			r.Put("/finish/{taskID}", h.finishTask)
+		})
 	})
 }
