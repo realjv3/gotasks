@@ -45,7 +45,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(time.Second * 20))
+	r.Use(middleware.Timeout(time.Second * 10))
 
 	authHandler := rest.NewAuthHandler(authService, userService)
 	authHandler.RegisterAuthRoutes(r)
