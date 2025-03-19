@@ -1,19 +1,59 @@
 package cmd
 
 import (
+	"database/sql"
+	"log"
 	"os"
 
+	"github.com/realjv3/gotasks/domain"
+	"github.com/realjv3/gotasks/interfaces/storage"
+	"github.com/realjv3/gotasks/services"
+
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 )
+
+type App struct {
+	userService domain.UserService
+	authService domain.AuthService
+	taskService domain.TaskService
+}
+
+var app *App
+
+func init() {
+	log.Println("Initializing database...")
+
+	db, err := sql.Open("sqlite3", "tasks.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Initializing services...")
+
+	userRepo, err := storage.NewUserRepo(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	taskRepo, err := storage.NewTaskRepo(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app = &App{
+		userService: services.NewUserService(userRepo),
+		authService: services.NewAuthService(userRepo),
+		taskService: services.NewTaskService(taskRepo),
+	}
+
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gotasks",
 	Short: "A task manager",
 	Long:  "A task manager to help you get stuff done.",
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -24,15 +64,3 @@ func Execute() {
 		os.Exit(1)
 	}
 }
-
-//func init() {
-// Here you will define your flags and configuration settings.
-// Cobra supports persistent flags, which, if defined here,
-// will be global for your application.
-
-// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gotasks.yaml)")
-
-// Cobra also supports local flags, which will only run
-// when this action is called directly.
-//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-//}
