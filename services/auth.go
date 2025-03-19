@@ -9,6 +9,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/realjv3/gotasks/domain"
@@ -55,7 +56,7 @@ func (s *authService) Login(userID int, password string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
-		"sub": user.ID,
+		"sub": strconv.Itoa(user.ID),
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 

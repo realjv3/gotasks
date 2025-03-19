@@ -1,9 +1,11 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -51,7 +53,21 @@ func authMiddleware(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		}
 
-		next.ServeHTTP(w, r)
+		sub, err := token.Claims.GetSubject()
+		if err != nil {
+			http.Error(w, "failed to get subject from JWT", http.StatusInternalServerError)
+			return
+		}
+
+		userID, err := strconv.Atoi(sub)
+		if err != nil {
+			http.Error(w, "error converting user id", http.StatusInternalServerError)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "user-id", userID)
+		
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

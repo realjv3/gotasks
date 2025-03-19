@@ -55,11 +55,13 @@ func (h *UserHandler) getUser(w http.ResponseWriter, r *http.Request) {
 	user, err := h.service.GetUser(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	err = json.NewEncoder(w).Encode(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	return
