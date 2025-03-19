@@ -3,7 +3,6 @@ package cmd
 import (
 	"database/sql"
 	"log"
-	"os"
 
 	"github.com/realjv3/gotasks/domain"
 	"github.com/realjv3/gotasks/interfaces/storage"
@@ -61,6 +60,6 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
