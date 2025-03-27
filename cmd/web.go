@@ -12,15 +12,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// webCmd represents the web command
-var webCmd = &cobra.Command{
+// WebCmd represents the web command
+var WebCmd = &cobra.Command{
 	Use:   "web",
 	Short: "Run as web server",
 	Long:  "The app will run as a web server.",
 	Run:   runWeb,
 }
 
-func runWeb(cmd *cobra.Command, args []string) {
+func runWeb(_ *cobra.Command, _ []string) {
 	log.Println("Starting HTTP server...")
 
 	r := chi.NewRouter()
@@ -38,8 +38,4 @@ func runWeb(cmd *cobra.Command, args []string) {
 	taskHandler.RegisterRoutes(r)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
-}
-
-func init() {
-	rootCmd.AddCommand(webCmd)
 }

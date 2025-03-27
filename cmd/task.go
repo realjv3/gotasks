@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// taskCmd represents the task command
-var taskCmd = &cobra.Command{
+// TaskCmd represents the task command
+var TaskCmd = &cobra.Command{
 	Use:   "task",
 	Short: "Manage tasks",
 	Long:  "Create and finish tasks",
 }
 
-var taskAddCmd = &cobra.Command{
+var TaskAddCmd = &cobra.Command{
 	Use:   "add {title} {description}",
 	Short: "Create task",
 	Long:  "This will create a tasks with the given title and description",
@@ -36,7 +36,7 @@ var taskAddCmd = &cobra.Command{
 	},
 }
 
-var taskGetCmd = &cobra.Command{
+var TaskGetCmd = &cobra.Command{
 	Use:   "get {userID}",
 	Short: "Get a user's tasks",
 	Long:  "This will get all of a user's tasks",
@@ -60,7 +60,7 @@ var taskGetCmd = &cobra.Command{
 	},
 }
 
-var taskCompleteCmd = &cobra.Command{
+var TaskCompleteCmd = &cobra.Command{
 	Use:   "complete {taskID}",
 	Short: "Complete a task",
 	Long:  "This will mark a task a completed",
@@ -80,9 +80,4 @@ var taskCompleteCmd = &cobra.Command{
 
 		slog.Info(fmt.Sprintf("%#v", task))
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(taskCmd)
-	taskCmd.AddCommand(taskAddCmd, taskGetCmd, taskCompleteCmd)
 }
