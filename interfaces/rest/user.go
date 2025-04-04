@@ -25,8 +25,13 @@ func (h *UserHandler) createUser(w http.ResponseWriter, r *http.Request) {
 		&user,
 	)
 
-	if err != nil || user.Name == "" || user.Email == "" || user.Password == "" {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if user.Name == "" || user.Email == "" || user.Password == "" {
+		http.Error(w, "malformed payload", http.StatusBadRequest)
 		return
 	}
 

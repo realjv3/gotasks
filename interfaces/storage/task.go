@@ -34,17 +34,16 @@ func NewTaskRepo(db *sql.DB) (domain.TaskRepository, error) {
 }
 
 func (r *taskRepo) Create(task *domain.Task) (*domain.Task, error) {
-	res, err := r.db.Exec(`INSERT INTO tasks (title, description, user_id) VALUES (?, ?, ?)`, task.Title, task.Description, task.UserID)
+	err := r.db.QueryRow(
+		`INSERT INTO tasks (title, description, user_id) VALUES (?, ?, ?) RETURNING id`,
+		task.Title,
+		task.Description,
+		task.UserID,
+	).Scan(&task.ID)
+
 	if err != nil {
 		return nil, err
 	}
-
-	taskID, err := res.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	task.ID = int(taskID)
 
 	return task, nil
 }
@@ -81,13 +80,14 @@ func (r *taskRepo) GetByUser(userID int) ([]*domain.Task, error) {
 }
 
 func (r *taskRepo) Update(task *domain.Task) (*domain.Task, error) {
-	_, err := r.db.Exec(
-		"UPDATE tasks SET title=?, description=?, done=? WHERE id=?",
+	err := r.db.QueryRow(
+		"UPDATE tasks SET title=?, description=?, done=?, updated_at = CURRENT_TIMESTAMP WHERE id=? RETURNING *",
 		task.Title,
 		task.Description,
 		task.Done,
 		task.ID,
-	)
+	).Scan(&task.ID, &task.Title, &task.Description, &task.Done, &task.UserID, &task.CreatedAt, &task.UpdatedAt)
+
 	if err != nil {
 		return nil, err
 	}

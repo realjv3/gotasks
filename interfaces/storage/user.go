@@ -35,24 +35,29 @@ func NewUserRepo(db *sql.DB) (domain.UserRepository, error) {
 }
 
 func (r *userRepo) Create(user *domain.User) (*domain.User, error) {
-	res, err := r.db.Exec(`INSERT INTO users (name, email, password) VALUES (?, ?, ?)`, user.Name, user.Email, user.Password)
+	err := r.db.QueryRow(`INSERT INTO
+    	users (name, email, password)
+		VALUES (?, ?, ?)
+		RETURNING id, name, email, created_at, updated_at`, user.Name, user.Email, user.Password).
+		Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	userID, err := res.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
+	user.Password = ""
 
-	return r.Get(int(userID))
+	return user, nil
 }
 
 func (r *userRepo) Get(id int) (*domain.User, error) {
-	row := r.db.QueryRow("SELECT * FROM users WHERE id = ?", id)
+	row := r.db.QueryRow(`SELECT
+			id, name, email, active, created_at, updated_at
+		FROM
+		    users
+		WHERE id = ?`, id)
 
 	var ret domain.User
-	err := row.Scan(&ret.ID, &ret.Name, &ret.Email, &ret.Password, &ret.Active, &ret.CreatedAt, &ret.UpdatedAt)
+	err := row.Scan(&ret.ID, &ret.Name, &ret.Email, &ret.Active, &ret.CreatedAt, &ret.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("user not found")
