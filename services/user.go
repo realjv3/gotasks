@@ -22,9 +22,23 @@ func (s *userService) CreateUser(user *domain.User) (*domain.User, error) {
 
 	user.Password = string(password)
 
-	return s.repo.Create(user)
+	newUser, err := s.repo.Create(user)
+	if err != nil {
+		return nil, err
+	}
+
+	newUser.Password = ""
+
+	return newUser, nil
 }
 
 func (s *userService) GetUser(id int) (*domain.User, error) {
-	return s.repo.Get(id)
+	user, err := s.repo.Get(id)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = ""
+
+	return user, nil
 }
